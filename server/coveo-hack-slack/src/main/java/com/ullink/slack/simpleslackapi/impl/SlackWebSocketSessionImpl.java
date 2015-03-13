@@ -257,6 +257,25 @@ class SlackWebSocketSessionImpl extends AbstractSlackSessionImpl implements Slac
     }
 
     @Override
+    public void archiveChannel(SlackChannel channel)
+    {
+        HttpClient client = getHttpClient();
+        HttpPost request = new HttpPost("https://slack.com/api/channels.archive");
+        List<NameValuePair> nameValuePairList = new ArrayList<>();
+        nameValuePairList.add(new BasicNameValuePair("token", authToken));
+        nameValuePairList.add(new BasicNameValuePair("channel", channel.getId()));
+        try {
+            request.setEntity(new UrlEncodedFormEntity(nameValuePairList, "UTF-8"));
+            HttpResponse response = client.execute(request);
+            String jsonResponse = CharStreams.toString(new InputStreamReader(response.getEntity().getContent()));
+            LOGGER.debug("Archive Channel return: " + jsonResponse);
+        } catch (Exception e) {
+            // TODO : improve exception handling
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public SlackMessageHandle deleteMessage(String timeStamp,
                                             SlackChannel channel)
     {

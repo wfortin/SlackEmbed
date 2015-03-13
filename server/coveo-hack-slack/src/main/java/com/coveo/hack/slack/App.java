@@ -10,16 +10,23 @@ import com.coveo.hack.slack.model.ParsedSlackMessage;
 import com.coveo.hack.slack.model.SenderInfo;
 import com.coveo.hack.slack.model.WidgetMessage;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import com.ullink.slack.simpleslackapi.SlackAttachment;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackMessage;
 import com.ullink.slack.simpleslackapi.SlackMessageListener;
 import com.ullink.slack.simpleslackapi.SlackSession;
 import com.ullink.slack.simpleslackapi.impl.SlackSessionFactory;
+import net.sf.uadetector.ReadableUserAgent;
+import net.sf.uadetector.UserAgentStringParser;
+import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class App
 {
@@ -27,12 +34,15 @@ public class App
     private static final String SLACKLINE_BOT_NAME = "Slackline";
     private static final String SLACKLINE_BOT_ICON_URL = "https://raw.githubusercontent.com/wfortin/SlackEmbed/master/client/img/logo.png";
 
+    private Duration SESSION_DURATION = Duration.ofMinutes(1);
+
     private UserStorage userStorage;
     private UserNameStrategy userNameStrategy;
     private SlackUserIconStrategy userIconStrategy;
     private RegexSlackMessageParser messageParser;
     private SessionConnectionCache connectionCache;
     private ConversationHistoryStorage conversationHistoryStorage;
+    private UserAgentStringParser userAgentParser;
 
     private SlackSession slack;
     private SocketIOServer webSocketServer;
@@ -56,10 +66,11 @@ public class App
         messageParser = new RegexSlackMessageParser();
         connectionCache = new MemorySessionConnectionCache();
         conversationHistoryStorage = new MemoryConversationHistoryStorage();
+        userAgentParser = UADetectorServiceFactory.getResourceModuleParser();
 
         initSlackClient();
         initWebSocketServer();
-
+        Executors.newScheduledThreadPool(10).scheduleAtFixedRate(this::cleanUp, 0, 10, TimeUnit.SECONDS);
     }
 
     private void onSlackMessage(SlackMessage slackMessage)
@@ -68,14 +79,14 @@ public class App
         ParsedSlackMessage parsedSlackMessage = messageParser.parse(slackMessage);
         if (parsedSlackMessage.getOperation() == ParsedSlackMessage.Operation.CHAT) {
             Optional<UserInfo> userInfo = userStorage.getUserByName(parsedSlackMessage.getTargetUsername());
-            userInfo.ifPresent(user -> sendMessageToUser(user, parsedSlackMessage.getChatText(), null));
+            userInfo.ifPresent(user -> sendMessageToUser(user, "Agent", parsedSlackMessage.getChatText(), null));
         } else if (parsedSlackMessage.getOperation() == ParsedSlackMessage.Operation.UNKNOWN
                 && parsedSlackMessage.getOriginalSlackMessage().getRawSubType() == null) {
             // Perhaps we're in a dedicated chat room?
             // We ignore anything with a subtype as they're not chat messages. See https://api.slack.com/events/message
             // TODO support message changes.
             Optional<UserInfo> userInfo = userStorage.getUserByChannel(parsedSlackMessage.getChannelName());
-            userInfo.ifPresent(user -> sendMessageToUser(user, parsedSlackMessage.getChatText(), null));
+            userInfo.ifPresent(user -> sendMessageToUser(user, "Agent", parsedSlackMessage.getChatText(), null));
         } else if (parsedSlackMessage.getOperation() == ParsedSlackMessage.Operation.TAKE) {
             Optional<UserInfo> userInfo = userStorage.getUserByName(parsedSlackMessage.getTargetUsername());
             userInfo.ifPresent(u -> {
@@ -92,14 +103,14 @@ public class App
     }
 
     private void sendMessageToUser(UserInfo userInfo,
+                                   String fromUsername,
                                    String chatText,
                                    ZonedDateTime messageTimestamp)
     {
-        logger.info("Sending message '{}' to user {}", chatText, userInfo.getName());
         Optional<SocketIOClient> client = connectionCache.getClientForSession(userInfo.getCurrentSession());
 
         ChatMessage message = new ChatMessage();
-        message.setUsername("Agent");
+        message.setUsername(fromUsername);
         message.setContent(chatText);
 
         if (messageTimestamp == null) {
@@ -111,7 +122,7 @@ public class App
         }
 
         client.ifPresent(c -> {
-            logger.info("Found client, sending");
+            logger.info("Sending message '{}' to user {}", message, userInfo.getName());
             c.sendEvent("chat", message);
         });
     }
@@ -168,17 +179,16 @@ public class App
             logger.info("New session connected {}" + client.getSessionId());
             connectionCache.addSession(client);
         });
-        /*webSocketServer.addDisconnectListener(client -> {
+
+        webSocketServer.addDisconnectListener(client -> {
             Optional<UserInfo> userInfo = userStorage.getUserBySession(client.getSessionId().toString());
             userInfo.ifPresent(u -> {
-                slack.sendMessage(u.isTaken() ? slack.findChannelByName(u.getChannelName().get())
-                                             : getDefaultSupportChannel(),
-                                  "User @" + u.getName() + " left.",
-                                  null,
-                                  SLACKLINE_BOT_NAME,
-                                  SLACKLINE_BOT_ICON_URL);
+                logger.info("User {} disconnected session {}", u, client.getSessionId());
+                connectionCache.removeSession(client);
+                u.setCurrentSession(null);
+                userStorage.saveUser(u);
             });
-        });*/
+        });
 
         webSocketServer.addEventListener("welcome", WelcomeMessage.class, (client,
                                                                            data,
@@ -189,7 +199,7 @@ public class App
                 u.setCurrentSession(client.getSessionId().toString());
                 userStorage.saveUser(u);
                 for (ChatMessage previousChat : conversationHistoryStorage.get(u.getId())) {
-                    sendMessageToUser(u, previousChat.getContent(), previousChat.getTimestamp());
+                    sendMessageToUser(u, "You", previousChat.getContent(), previousChat.getTimestamp());
                 }
             });
             if (!userInfo.isPresent()) {
@@ -198,8 +208,7 @@ public class App
                                                     client.getSessionId().toString());
                 logger.info("New user {} with session {}.", newUserInfo, client.getSessionId());
                 userStorage.saveUser(newUserInfo);
-                slack.sendMessage(getDefaultSupportChannel(), "User @" + newUserInfo.getName()
-                        + " just opened the support chat.", null, SLACKLINE_BOT_NAME, SLACKLINE_BOT_ICON_URL);
+                sendWelcomeMessageToSlack(client, data, newUserInfo);
             }
         });
 
@@ -214,8 +223,52 @@ public class App
         Runtime.getRuntime().addShutdownHook(new Thread(webSocketServer::stop));
     }
 
+    private void sendWelcomeMessageToSlack(SocketIOClient client,
+                                           WelcomeMessage data,
+                                           UserInfo newUserInfo)
+    {
+        SlackAttachment attachment = new SlackAttachment("New user @" + newUserInfo.getName(), "New user @"
+                + newUserInfo.getName(), null, null);
+        attachment.addField("User ID", newUserInfo.getId(), true);
+        attachment.addField("IP", client.getRemoteAddress().toString().replace("/", ""), true);
+        attachment.addField("Language", data.getLanguage(), true);
+        attachment.addField("Timezone", data.getTimezone(), true);
+        ReadableUserAgent userAgent = userAgentParser.parse(data.getUserAgent() == null ? "" : data.getUserAgent());
+        attachment.addField("OS", userAgent.getOperatingSystem().getName(), true);
+        attachment.addField("Browser", userAgent.getFamily().getName() + " "
+                + userAgent.getVersionNumber().toVersionString(), true);
+        attachment.addField("Current page", data.getCurrentPage(), false);
+
+        slack.sendMessage(getDefaultSupportChannel(), null, attachment, SLACKLINE_BOT_NAME, SLACKLINE_BOT_ICON_URL);
+    }
+
     private SenderInfo extractInfo(SocketIOClient client)
     {
         return new SenderInfo(client.getRemoteAddress().toString(), client.getSessionId());
+    }
+
+    private void cleanUp()
+    {
+        for (UserInfo userInfo : userStorage.getAllUsers()) {
+            if (Duration.between(userInfo.getLastInteractionTimestamp(), ZonedDateTime.now())
+                        .compareTo(SESSION_DURATION) > 0) {
+                logger.info("User {} is idle since {}.", userInfo, userInfo.getLastInteractionTimestamp());
+                userStorage.remove(userInfo);
+                slack.sendMessage(getDefaultSupportChannel(),
+                                  "User " + userInfo.getName() + " is idle since "
+                                          + userInfo.getLastInteractionTimestamp() + ".",
+                                  null,
+                                  SLACKLINE_BOT_NAME,
+                                  SLACKLINE_BOT_ICON_URL);
+                if (userInfo.isTaken()) {
+                    Optional<SlackChannel> channel = Optional.ofNullable(slack.findChannelByName(userInfo.getChannelName()
+                                                                                                         .get()));
+                    channel.ifPresent(c -> {
+                        logger.info("Archiving channel {}.", c);
+                        slack.archiveChannel(c);
+                    });
+                }
+            }
+        }
     }
 }

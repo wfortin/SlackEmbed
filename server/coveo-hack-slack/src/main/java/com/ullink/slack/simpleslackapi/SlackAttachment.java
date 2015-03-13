@@ -26,12 +26,6 @@ public class SlackAttachment
         this.pretext = pretext;
     }
 
-    @Override
-    public String toString()
-    {
-        return "SlackAttachment [title=" + title + ", fallback=" + fallback + ", text=" + text + ", pretext=" + pretext + ", fields=" + fields + "]";
-    }
-
     public void addField(String title, String value, boolean isShort)
     {
         if (fields == null)
@@ -48,5 +42,11 @@ public class SlackAttachment
             markdown_in = new ArrayList<>();
         }
         markdown_in.add(value);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "SlackAttachment [title=" + title + ", fallback=" + fallback + ", text=" + text + ", pretext=" + pretext + ", fields=" + fields + "]";
     }
 }

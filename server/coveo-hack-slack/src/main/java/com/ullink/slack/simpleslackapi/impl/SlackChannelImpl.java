@@ -10,13 +10,16 @@ import com.ullink.slack.simpleslackapi.SlackUser;
 
 class SlackChannelImpl implements SlackChannel
 {
-    private String         id;
-    private String         name;
+    private String id;
+    private String name;
     private Set<SlackUser> members = new HashSet<>();
-    private String         topic;
-    private String         purpose;
+    private String topic;
+    private String purpose;
 
-    SlackChannelImpl(String id, String name, String topic, String purpose)
+    SlackChannelImpl(String id,
+                     String name,
+                     String topic,
+                     String purpose)
     {
         this.id = id;
         this.name = name;
@@ -62,5 +65,11 @@ class SlackChannelImpl implements SlackChannel
     public String getPurpose()
     {
         return purpose;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "SlackChannelImpl{" + "name='" + name + '\'' + ", id='" + id + '\'' + '}';
     }
 }

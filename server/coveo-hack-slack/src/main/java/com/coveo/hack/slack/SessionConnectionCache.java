@@ -9,4 +9,6 @@ public interface SessionConnectionCache
     Optional<SocketIOClient> getClientForSession(String sessionKey);
 
     void addSession(SocketIOClient socketIOClient);
+
+    void removeSession(SocketIOClient client);
 }

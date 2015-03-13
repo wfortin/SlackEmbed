@@ -25,6 +25,8 @@ public interface SlackSession
 
     void connect();
 
+    void archiveChannel(SlackChannel channel);
+
     SlackMessageHandle deleteMessage(String timeStamp, SlackChannel channel);
 
     SlackMessageHandle sendMessage(
