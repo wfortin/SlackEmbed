@@ -1,3 +1,0 @@
-interface ChatEvent {
-  content: string;
-}
