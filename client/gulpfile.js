@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var template = require('gulp-template-compile');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
+var typescript = require('gulp-tsc');
 var path = require('path');
 
 gulp.task('lib', function() {
@@ -12,17 +13,20 @@ gulp.task('lib', function() {
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('templates', function () {
-    gulp.src('templates/*.ejs')
-        .pipe(template({
-            name: function (file) {
-                return path.basename(file.relative, path.extname(file.relative));
-            }
+gulp.task('ts', function() {
+    return gulp.src('ts/SlackLine.ts')
+        .pipe(typescript({
+            out: 'app.js',
+            outDir: 'dist',
+            keepTree: false,
+            emitError: false,
+            target: 'ES5'
         }))
-        .pipe(concat('templates.js'))
         .pipe(gulp.dest('dist'));
 });
 
+gulp.task('default', ['lib', 'ts']);
+
 gulp.task('watch', function() {
-    gulp.watch('templates/**/*.ejs', ['templates']);
+    gulp.watch('ts/**/*.ts', ['ts']);
 });

@@ -1,19 +1,18 @@
-///<reference path='../definitions/lib.d.ts' />
+///<reference path='definitions/lib.d.ts' />
 
 module SlackLine {
 
-  export interface ChatEvent {
-    content: string;
-  }
-
   export class ChatView {
-    private placeholder:Element;
+    private placeholder:HTMLElement;
     private sendMessageButton:Element;
     private newMessageInput:HTMLTextAreaElement;
     private messagesContainer: Element;
 
-    constructor() {
-      this.placeholder = document.querySelector('#chat-placeholder');
+    public doSubmitMessage: Function;
+
+    constructor(private username: string) {
+      this.placeholder = <HTMLElement> document.querySelector('#slackline');
+      this.placeholder.classList.add('collapsed');
       this.createChatBox();
 
       this.sendMessageButton = document.querySelector('#send-message');
@@ -33,28 +32,32 @@ module SlackLine {
 
     protected onSumbitMessage(e:Event) {
       var message = this.newMessageInput.value.toString();
-      this.addMessage(message);
-      chatRoom.sendChatMessage({
-        content: message
-      });
+      var chatEvent : ChatEvent = {
+        content: message,
+        username: 'You',
+        timestamp: new Date().getTime()/1000
+      };
+      this.addMessage(chatEvent);
       this.newMessageInput.value = '';
+
+      if (this.doSubmitMessage) {
+        this.doSubmitMessage(chatEvent);
+      }
     }
 
     protected checkSubmitMessage(e:KeyboardEvent) {
-      if (e.keyCode == 13) {
+      if (e.keyCode == 13 && !e.shiftKey) {
         this.onSumbitMessage(e);
       }
     }
 
-    public addMessage(message: string) {
+    public addMessage(chatEvent: ChatEvent) {
       this.messagesContainer = document.querySelector('.messages-container');
       var messageEl = document.createElement('div');
-      messageEl.innerHTML = Templates.ChatMessage({
-        user: 'User Name Here',
-        time: new Date().toISOString(),
-        message: message
-      });
+      messageEl.classList.add('message');
+      messageEl.innerHTML = Templates.ChatMessage(chatEvent);
       this.messagesContainer.appendChild(messageEl);
+      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }
   }
 }
