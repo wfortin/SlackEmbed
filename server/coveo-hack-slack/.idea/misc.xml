@@ -31,7 +31,7 @@
     <option name="formatter" value="ECLIPSE" />
     <option name="id" value="1423782954452" />
     <option name="name" value="default" />
-    <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../../../ua/normes/code-formatter-1.00.xml" />
+    <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../../../../../ua/normes/code-formatter-1.00.xml" />
     <option name="selectedJavaProfile" value="code-formatter-1.00" />
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />

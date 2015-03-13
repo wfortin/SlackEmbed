@@ -58,7 +58,6 @@ public class App
 
     private void onSlackMessage(SlackMessage slackMessage)
     {
-        // TODO
         logger.info("SlackMessage: {}", slackMessage);
         ParsedSlackMessage parsedSlackMessage = messageParser.parse(slackMessage);
         if (parsedSlackMessage.getOperation() == ParsedSlackMessage.Operation.CHAT) {
