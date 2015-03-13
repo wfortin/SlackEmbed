@@ -13,3 +13,4 @@ hs_err_pid*
 
 .idea/
 client/node_modules
+client/dist
