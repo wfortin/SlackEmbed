@@ -6,8 +6,8 @@ module SlackLine {
     private chatRoom: SlackLine.ChatRoom;
 
     constructor(username: string) {
-      this.chatView = new SlackLine.ChatView(username);
-      this.chatRoom = new SlackLine.ChatRoom(this.chatView);
+      this.chatView = new SlackLine.ChatView();
+      this.chatRoom = new SlackLine.ChatRoom(this.chatView, username);
     }
   }
 }
