@@ -42,7 +42,7 @@ module SlackLine {
       this.sendWelcomeMessage({
         userId: this.username,
         userAgent: navigator.userAgent,
-        currentPage: 'some-page',
+        currentPage: document.URL,
         timezone: -(new Date().getTimezoneOffset()/60)+"",
         language: navigator.language
       });
