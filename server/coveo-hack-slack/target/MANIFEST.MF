@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: coveo-hack-slack
+Implementation-Version: 1.0-SNAPSHOT
+Implementation-Vendor-Id: coveo-hack
+Build-Jdk: 1.8.0_31
+Built-By: gsimard
+Created-By: IntelliJ IDEA
+Main-Class: ${start-class}
+
