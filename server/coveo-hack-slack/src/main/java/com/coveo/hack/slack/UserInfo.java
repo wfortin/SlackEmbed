@@ -4,14 +4,18 @@ import java.util.Optional;
 
 public class UserInfo
 {
+    private String id;
     private String name;
-    private final String session;
+    private String currentSession;
     private Optional<String> channelName;
 
-    public UserInfo(String name, String session)
+    public UserInfo(String id,
+                    String name,
+                    String currentSession)
     {
+        this.id = id;
         this.name = name;
-        this.session = session;
+        this.currentSession = currentSession;
         this.channelName = Optional.empty();
     }
 
@@ -36,9 +40,19 @@ public class UserInfo
         this.channelName = Optional.of(channelName);
     }
 
-    public String getSession()
+    public String getCurrentSession()
     {
-        return session;
+        return currentSession;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setCurrentSession(String currentSession)
+    {
+        this.currentSession = currentSession;
     }
 
     @Override
@@ -61,5 +75,11 @@ public class UserInfo
     public int hashCode()
     {
         return name != null ? name.hashCode() : 0;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "UserInfo{" + "id='" + id + '\'' + ", name='" + name + '\'' + '}';
     }
 }

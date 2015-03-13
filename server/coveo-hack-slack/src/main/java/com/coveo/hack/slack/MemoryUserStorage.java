@@ -10,9 +10,9 @@ public class MemoryUserStorage implements UserStorage
     private Set<UserInfo> users = new HashSet<>();
 
     @Override
-    public Optional<UserInfo> getUserFromSession(String sessionKey)
+    public Optional<UserInfo> getUserBySession(String sessionKey)
     {
-        return findUserBy(u -> u.getSession().equals(sessionKey));
+        return findUserBy(u -> u.getCurrentSession().equals(sessionKey));
     }
 
     @Override
@@ -25,6 +25,12 @@ public class MemoryUserStorage implements UserStorage
     public Optional<UserInfo> getUserByChannel(String channelName)
     {
         return findUserBy(u -> u.getChannelName().isPresent() && u.getChannelName().get().equals(channelName));
+    }
+
+    @Override
+    public Optional<UserInfo> getUserById(String id)
+    {
+        return findUserBy(u -> u.getId().equals(id));
     }
 
     @Override
