@@ -1,6 +1,9 @@
 package com.coveo.hack.slack;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -27,6 +30,11 @@ public class MemoryUserStorage implements UserStorage
         return findUserBy(u -> u.getChannelName().isPresent() && u.getChannelName().get().equals(channelName));
     }
 
+    @Override public List<UserInfo> getAllUsers()
+    {
+        return ImmutableList.copyOf(users);
+    }
+
     @Override
     public Optional<UserInfo> getUserById(String id)
     {
@@ -43,5 +51,10 @@ public class MemoryUserStorage implements UserStorage
     private Optional<UserInfo> findUserBy(Predicate<UserInfo> predicate)
     {
         return users.stream().filter(predicate).findFirst();
+    }
+
+    @Override public void remove(UserInfo userInfo)
+    {
+        users.remove(userInfo);
     }
 }

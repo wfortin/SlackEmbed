@@ -8,17 +8,22 @@ import java.util.Optional;
 
 public class MemorySessionConnectionCache implements SessionConnectionCache
 {
-    Map<String, SocketIOClient> userIdToClientCache = new HashMap<>();
+    Map<String, SocketIOClient> cache = new HashMap<>();
 
     @Override
     public Optional<SocketIOClient> getClientForSession(String sessionId)
     {
-        return Optional.ofNullable(userIdToClientCache.get(sessionId));
+        return Optional.ofNullable(cache.get(sessionId));
     }
 
     @Override
     public void addSession(SocketIOClient socketIOClient)
     {
-        userIdToClientCache.put(socketIOClient.getSessionId().toString(), socketIOClient);
+        cache.put(socketIOClient.getSessionId().toString(), socketIOClient);
+    }
+
+    @Override public void removeSession(SocketIOClient client)
+    {
+        cache.remove(client.getSessionId().toString());
     }
 }

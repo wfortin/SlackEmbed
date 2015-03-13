@@ -1,5 +1,6 @@
 package com.coveo.hack.slack;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 public class UserInfo
@@ -8,6 +9,7 @@ public class UserInfo
     private String name;
     private String currentSession;
     private Optional<String> channelName;
+    private ZonedDateTime lastInteraction;
 
     public UserInfo(String id,
                     String name,
@@ -17,6 +19,7 @@ public class UserInfo
         this.name = name;
         this.currentSession = currentSession;
         this.channelName = Optional.empty();
+        this.lastInteraction = ZonedDateTime.now();
     }
 
     public String getName()
@@ -55,6 +58,16 @@ public class UserInfo
         this.currentSession = currentSession;
     }
 
+    public ZonedDateTime getLastInteractionTimestamp()
+    {
+        return this.lastInteraction;
+    }
+
+    public void touchLastInteraction()
+    {
+        this.lastInteraction = ZonedDateTime.now();
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -65,7 +78,7 @@ public class UserInfo
 
         UserInfo userInfo = (UserInfo) o;
 
-        if (name != null ? !name.equals(userInfo.name) : userInfo.name != null)
+        if (id != null ? !id.equals(userInfo.id) : userInfo.id != null)
             return false;
 
         return true;
@@ -74,7 +87,7 @@ public class UserInfo
     @Override
     public int hashCode()
     {
-        return name != null ? name.hashCode() : 0;
+        return id != null ? id.hashCode() : 0;
     }
 
     @Override

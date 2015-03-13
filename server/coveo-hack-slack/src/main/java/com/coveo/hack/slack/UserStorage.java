@@ -1,5 +1,6 @@
 package com.coveo.hack.slack;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,8 @@ public interface UserStorage
     UserInfo saveUser(UserInfo userInfo);
 
     Optional<UserInfo> getUserByChannel(String channelName);
+
+    List<UserInfo> getAllUsers();
+
+    void remove(UserInfo userInfo);
 }

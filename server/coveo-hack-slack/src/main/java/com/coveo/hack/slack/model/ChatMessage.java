@@ -41,6 +41,6 @@ public class ChatMessage
     @Override
     public String toString()
     {
-        return content + timestamp == null ? "" : " (at " + timestamp + ")";
+        return "@" + getUsername() + ": " + content + timestamp == null ? "" : " (at " + timestamp + ")";
     }
 }
