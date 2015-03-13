@@ -1,6 +1,17 @@
 ///<reference path='definitions/lib.d.ts' />
 
 module SlackLine {
+
+  export interface ChatEvent {
+    content: string;
+    username?: string;
+    timestamp?: number;
+  }
+
+  export interface WelcomeEvent {
+    userId: string;
+  }
+
   export class ChatRoom {
     private socket: SocketIOClient.Socket;
 
@@ -13,20 +24,28 @@ module SlackLine {
       this.socket.on('connect', () => this.onConnect());
 
       this.socket.on('chat', (chatEvent: ChatEvent) => this.onChatMessage(chatEvent));
+
+      this.chatView.doSubmitMessage = (event: ChatEvent) => this.sendChatMessage(event);
     }
 
     onConnect() {
-      this.sendChatMessage({
-        content: 'new user connected needing help asap'
+      this.sendWelcomeMessage({
+        userId: 'wfortin1234'
       });
     }
 
     onChatMessage(chatEvent: ChatEvent) {
-      this.chatView.addMessage(chatEvent.content);
+      this.chatView.addMessage(chatEvent);
     }
 
     sendChatMessage(chatEvent: ChatEvent) {
       this.socket.emit('chat', chatEvent);
+    }
+
+    sendWelcomeMessage(welcomeEvent: WelcomeEvent) {
+      this.socket.emit('welcome', {
+        userId: welcomeEvent.userId
+      });
     }
   }
 }
