@@ -18,7 +18,7 @@ public class RegexSlackMessageParser implements SlackMessageParser
         parsedSlackMessage.setOperation(ParsedSlackMessage.Operation.UNKNOWN);
         parsedSlackMessage.setOriginalSlackMessage(slackMessage);
         parsedSlackMessage.setChannelName(slackMessage.getChannel().getName());
-        parsedSlackMessage.setChatText(slackMessage.getMessageContent());
+        parsedSlackMessage.setChatText(slackMessage.getMessageContent().trim());
 
         String message = slackMessage.getMessageContent();
 
@@ -26,15 +26,15 @@ public class RegexSlackMessageParser implements SlackMessageParser
         Matcher chatMessageMatcher = chatMessagePattern.matcher(message);
         if (chatMessageMatcher.matches()) {
             parsedSlackMessage.setOperation(ParsedSlackMessage.Operation.CHAT);
-            parsedSlackMessage.setTargetUsername(chatMessageMatcher.group(1));
-            parsedSlackMessage.setChatText(chatMessageMatcher.group(2));
+            parsedSlackMessage.setTargetUsername(chatMessageMatcher.group(1).trim());
+            parsedSlackMessage.setChatText(chatMessageMatcher.group(2).trim());
             return parsedSlackMessage;
         }
 
         Matcher takeMatcher = takePattern.matcher(message);
         if (takeMatcher.matches()) {
             parsedSlackMessage.setOperation(ParsedSlackMessage.Operation.TAKE);
-            parsedSlackMessage.setTargetUsername(takeMatcher.group(1));
+            parsedSlackMessage.setTargetUsername(takeMatcher.group(1).trim());
             return parsedSlackMessage;
         }
 
