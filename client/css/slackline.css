@@ -4,6 +4,14 @@
     right: 10px;
     border-left: 1px solid #c5c5c5;
     border-right: 1px solid #c5c5c5;
+    background-color: #fff;
+    transition: all 0.8s;
+    max-height: 800px;
+}
+
+#slackline.collapsed {
+    transition: all 0.8s;
+    max-height: 42px;
 }
 
 #slackline .chat-header {
@@ -22,9 +30,6 @@
     border-bottom: 1px solid #c5c5c5;
 }
 
-#slackline .messages-container .message {
-}
-
 #slackline .messages-container .message .user {
     font-weight: bold;
     float: left;
@@ -37,10 +42,6 @@
 #slackline .messages-container .message .message-text {
     clear: both;
     padding-bottom: 5px;
-}
-
-#slackline .new-message-container {
-
 }
 
 #slackline .new-message-container textarea {

@@ -3,16 +3,18 @@
 module SlackLine {
 
   export class ChatView {
-    private placeholder:HTMLElement;
+    private chatBox:HTMLElement;
     private sendMessageButton:Element;
     private newMessageInput:HTMLTextAreaElement;
     private messagesContainer: Element;
+    private chatBoxHeader: Element;
 
+    public doInitializeChat: Function;
     public doSubmitMessage: Function;
 
-    constructor(private username: string) {
-      this.placeholder = <HTMLElement> document.querySelector('#slackline');
-      this.placeholder.classList.add('collapsed');
+    constructor() {
+      this.chatBox = <HTMLElement> document.querySelector('#slackline');
+      this.chatBox.classList.add('collapsed');
       this.createChatBox();
 
       this.sendMessageButton = document.querySelector('#send-message');
@@ -22,12 +24,15 @@ module SlackLine {
       this.newMessageInput.addEventListener('keyup', (e:KeyboardEvent) => this.checkSubmitMessage(e));
 
       this.messagesContainer = document.querySelector('.messages-container');
+
+      this.chatBoxHeader = document.querySelector('#slackline .chat-header');
+      this.chatBoxHeader.addEventListener('click', (e: Event) => { this.toggleChatBox(e) })
     }
 
     private createChatBox() {
       var chatBox = document.createElement('div');
       chatBox.innerHTML = Templates.ChatBox();
-      this.placeholder.appendChild(chatBox);
+      this.chatBox.appendChild(chatBox);
     }
 
     protected onSumbitMessage(e:Event) {
@@ -58,6 +63,16 @@ module SlackLine {
       messageEl.innerHTML = Templates.ChatMessage(chatEvent);
       this.messagesContainer.appendChild(messageEl);
       this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    }
+
+    public toggleChatBox(e: Event) {
+      var isCollapsed = this.chatBox.classList.contains('collapsed');
+      if (isCollapsed) {
+        this.chatBox.classList.remove('collapsed');
+        this.doInitializeChat();
+      } else {
+        this.chatBox.classList.add('collapsed');
+      }
     }
   }
 }

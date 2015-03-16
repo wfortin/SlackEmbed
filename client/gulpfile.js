@@ -25,7 +25,14 @@ gulp.task('ts', function() {
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', ['lib', 'ts']);
+gulp.task('dist', ['lib', 'ts'], function() {
+    return gulp.src(['dist/lib.js', 'dist/app.js'])
+        .pipe(concat('slackline.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('default', ['dist']);
 
 gulp.task('watch', function() {
     gulp.watch('ts/**/*.ts', ['ts']);
