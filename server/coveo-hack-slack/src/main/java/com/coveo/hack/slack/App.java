@@ -34,7 +34,7 @@ public class App
     private static final String SLACKLINE_BOT_NAME = "Slackline";
     private static final String SLACKLINE_BOT_ICON_URL = "https://raw.githubusercontent.com/wfortin/SlackEmbed/master/client/img/logo.png";
 
-    private Duration SESSION_DURATION = Duration.ofMinutes(1);
+    private Duration SESSION_DURATION = Duration.ofMinutes(5);
 
     private UserStorage userStorage;
     private UserNameStrategy userNameStrategy;
